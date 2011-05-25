@@ -320,7 +320,7 @@ more an advantage than a limitation ;-)
 =item *
 
 Working only on C<< pre >> tags may seem a limitation, but this is the way any
-Pod to HTML transformer I'm aware of renders a Pod verbatim paragraph.
+Pod to HTML transformer I'm aware of renders a Pod verbatim paragraph in HTML.
 
 If you need to wrap your code in other HTML tags (for example C<ol> and C<li>
 to add line numbers), just reformat your html with this module B<first>.
