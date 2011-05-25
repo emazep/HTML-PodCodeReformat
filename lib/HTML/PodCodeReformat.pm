@@ -243,19 +243,20 @@ stripped only of the extra leading whitespaces, as any other line.
 
 =item *
 
-C<< $f->reformat_pre( $filename ) >>
+C<< reformat_pre( $filename ) >>
 
 =item *
 
-C<< $f->reformat_pre( $filehandle ) >>
+C<< reformat_pre( $filehandle ) >>
 
 =item *
 
-C<< $f->reformat_pre( \$string ) >>
+C<< reformat_pre( \$string ) >>
 
 =back
 
-It removes the I<extra> leading spaces from the lines contained in every
+The actual instance method which removes the I<extra> leading spaces from the
+lines contained in every
 C<< <pre>...</pre> >> block present in the given HTML document (of course
 preserving any I<real> indentation I<inside> code, as showed in the L</SYNOPSIS>
 above), and returns a string containing the HTML code modified that way.
