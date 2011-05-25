@@ -1,0 +1,8 @@
+.project
+.includepath
+.build
+HTML-PodCodeReformat-*
+*~
+*.tmp
+*.bak
+*.stackdump
