@@ -71,12 +71,12 @@ if ( @ARGV ) {
                     } else {
                         ( $backup_filename = $extension ) =~ s/\*/$in_filename/g
                     }
-                    move( $in_filename, $backup_filename ) or die
+                    move($in_filename, $backup_filename) or die
                     qq[Can't rename "$in_filename" to "$backup_filename": $!]
                 }
                 
                 open my $output, '>', $in_filename
-                    or die qq[Can't create file "$in_filename": $!];
+                    or die qq[Can't open file "$in_filename" for writing: $!];
                 select $output
             }
         }
