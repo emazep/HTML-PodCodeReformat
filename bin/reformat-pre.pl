@@ -31,21 +31,25 @@ my $help;
 
 my $extension;
 my $squash_blank_lines;
+my $line_numbers;
 
 GetOptions(
     'help|h|?' => \$help,
     'man'      => \$man,
     
     'squash-blank-lines|squash|s!' => \$squash_blank_lines,
+    'line-numbers|l!'              => \$line_numbers,
+    
     'backup|b:s'                   => \$extension
 ) or pod2usage(2);
 
 pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 pod2usage(2) if $help;
 
-my $f = HTML::PodCodeReformat->new({
-    squash_blank_lines => $squash_blank_lines
-});
+my $f = HTML::PodCodeReformat->new(
+    squash_blank_lines => $squash_blank_lines,
+    line_numbers       => $line_numbers
+);
 
 $| = 1;
 
@@ -87,7 +91,7 @@ __END__
 
 =head1 NAME
 
-reformat-pre.pl - Command line utility to remove the extra leading spaces from code blocks in HTML files rendered from pods
+reformat-pre.pl - Command line utility to reformat <pre> blocks in HTML files rendered from pods
 
 =head1 SYNOPSIS
 
@@ -99,6 +103,7 @@ reformat-pre.pl - Command line utility to remove the extra leading spaces from c
 This program reformats the html file(s) rendered from pods, by removing the
 extra leading spaces in the lines inside
 C<< <pre>...</pre> >> blocks (corresponding to Pod I<verbatim paragraphs>).
+Other transformations can be applied as well (see below).
 
 The given files are read and modified one by one, and the resulting content is
 printed to the standard output, unless the C<backup> option is used (see below).
@@ -128,13 +133,23 @@ overwritten.
 
 =head2 -s | --squash-blank-lines
 
-When used, it causes every line composed solely of
+It causes every line composed solely of
 spaces (C<\s>) in a C<pre> block, to be I<squashed> to an empty string
 (the newline is left untouched).
 
 Otherwise by default the I<blank lines> in a
 C<pre> block will be treated as I<normal> lines, that is, they will be
 stripped only of the extra leading whitespaces, as any other line.
+
+=head2 -l | --line-numbers
+
+It causes every line in a C<pre> text
+to be wrapped in C<< <li>...</li> >> tags, and the whole text to be wrapped in
+C<< <ol>...</ol> >> tags (so that a line number is prepended to every line in
+the C<pre> text, when the HTML document is viewed in a browser).
+
+In this case the original newlines in the C<pre> text are removed, to not add
+extra empty lines when the HTML document is rendered.
 
 =head2 -h | -? | --help
 

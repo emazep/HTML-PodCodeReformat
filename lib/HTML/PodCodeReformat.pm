@@ -14,6 +14,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors( qw/
     squash_blank_lines
+    line_numbers
     _html_parser
     _inside_pre
     _filtered_html
@@ -80,7 +81,9 @@ sub _reformat_pre_text {
         s/^\s+$// foreach @lines
     }
     
-    return join "\n", @lines
+    return $self->line_numbers
+        ? '<ol>' . join( '', map { "<li>$_</li>" } @lines ) . '</ol>'
+        : join "\n", @lines
 }
 
 sub reformat_pre {
@@ -113,7 +116,7 @@ __END__
 
 =head1 NAME
 
-HTML::PodCodeReformat - Removes extra leading spaces from code blocks in HTML rendered from Pod
+HTML::PodCodeReformat - Reformats HTML code blocks coming from Pod verbatim paragraphs
 
 =head1 SYNOPSIS
 
@@ -153,6 +156,12 @@ HTML::PodCodeReformat - Removes extra leading spaces from code blocks in HTML re
 
 =head1 DESCRIPTION
 
+This module is mainly intended to strip the extra leading spaces which appear
+in text lines inside C<< <pre>...</pre> >> blocks
+(corresponding to Pod I<verbatim paragraphs>)
+in an HTML-transformed pod (then it can optionally apply other transformations 
+as well on such blocks).
+
 L<perlpodspec> states that (leading) I<whitespace is significant in verbatim
 paragraphs>, that is, they must be preserved in the final output (e.g. HTML).
 
@@ -187,8 +196,8 @@ its C<strip_verbatim_indent> method), which has the advantage that it works with
 any final format.
 
 However it requires you to pass the leading string to strip, which, to work
-across different pods, of course requires the indentation of verbatim blocks to
-be consistent (which is very unlikely, if said pods come from many different
+across different pods, of course requires the indentation of verbatim paragraphs
+to be consistent (which is very unlikely, if said pods come from many different
 authors). Alternatively, an heuristic to remove the extra indentation can be
 provided (through a code reference).
 
@@ -219,7 +228,7 @@ C<< HTML::PodCodeReformat->new( \%options ) >>
 It creates and returns a new C<HTML::PodCodeReformat> object. It accepts its
 options either as a hash or a hashref.
 
-It can take the following single option:
+It can take the following options:
 
 =over 4
 
@@ -235,7 +244,24 @@ When set to I<false> (which is the default) the I<blank lines> in a
 C<pre> block will be treated as I<normal> lines, that is, they will be
 stripped only of the extra leading whitespaces, as any other line.
 
+=item *
+
+C<line_numbers>
+
+Boolean option which, when set to true, causes every line in a C<pre> text
+to be wrapped in C<< <li>...</li> >> tags, and the whole text to be wrapped in
+C<< <ol>...</ol> >> tags (so that a line number is prepended to every line in
+the C<pre> text, when the HTML document is viewed in a browser).
+
+In this case the original newlines in the C<pre> text are removed, to not add
+extra empty lines when the HTML document is rendered.
+
+It defaults to false.
+
 =back
+
+The above options can be read/set after the object construnction through their
+corresponding methods as well.
 
 =head2 C<reformat_pre>
 
@@ -255,32 +281,38 @@ C<< reformat_pre( \$string ) >>
 
 =back
 
-The actual instance method which removes the I<extra> leading spaces from the
+Instance method which removes the I<extra> leading spaces from the
 lines contained in every
-C<< <pre>...</pre> >> block present in the given HTML document (of course
+C<< <pre>...</pre> >> block in the given HTML document (of course
 preserving any I<real> indentation I<inside> code, as showed in the L</SYNOPSIS>
 above), and returns a string containing the HTML code modified that way.
 
 It can take the name of the HTML file, an already opened filehandle or a
 reference to a string containing the HTML code.
 
-It would work even on nested C<< pre >> blocks, though this situation has never
+It would work even on nested C<pre> blocks, though this situation has never
 been encountered in I<real> pods.
+
+If the options C<squash_blank_lines> and C<line_numbers> are set, the
+corresponding transformations (described above) are applied as well (after
+the extra leading spaces removal).
 
 =head1 ALGORITHM
 
-The adopted algorithm is extremely simple.
+The adopted algorithm to remove the extra leading whitespaces is extremely
+simple.
 
 Skipping some minor details, it basically works
-this way: for each C<pre> block in the given HTML document, first the length of
-the shortest leading whitespace string across all the lines in the block is
-calculated (ignoring empty lines), then every line in the block is
-I<shifted to the left> by such amount.
+this way: given an HTML document, for each text block inside
+C<< <pre>...</pre> >> tags, first the length of the shortest leading whitespace
+string across all the lines in the block is calculated (ignoring empty lines),
+then every line in the block is I<shifted to the left> by such amount.
 
 =head1 LIMITATIONS
 
 With the exception explained below in the L</Non-limitations> section, any
-C<< <pre>...</pre> >> block which has I<extra> leading spaces will be I<fixed>.
+C<< <pre>...</pre> >> block which has I<extra> leading spaces will be
+reformatted.
 This will happen also if a given verbatim paragraph (most probably composed of
 text, not code) is intended to stay indented (no pun intended) that way, such as
 in, for example:
@@ -290,7 +322,7 @@ in, for example:
         8-spaces indented
         (but it will be shifted to the first column :-(
 
-Currently there is no way to I<protect> a C<< pre >> block, but such requirement
+Currently there is no way to I<protect> a C<pre> block, but such requirement
 should be really rare.
 
 =head2 Non-limitations
@@ -315,16 +347,13 @@ following block:
 
 from L<< Text::Format|Text::Format/DESCRIPTION >>.
 
-That's why such blocks will be left unaltered, and that's why it's hopefully
-more an advantage than a limitation ;-)
+That's why such blocks will be left unaltered, and that's why it's
+more an advantage than a limitation (hopefully).
 
 =item *
 
-Working only on C<< pre >> tags may seem a limitation, but this is the way any
+Working only on C<pre> tags may seem a limitation, but this is the way any
 Pod to HTML transformer I'm aware of renders a Pod verbatim paragraph in HTML.
-
-If you need to wrap your code in other HTML tags (for example C<ol> and C<li>
-to add line numbers), just reformat your html with this module B<first>.
 
 =back
 
